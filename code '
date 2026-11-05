@@ -1,0 +1,233 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <iomanip>
+#include <string>
+#include <ctime>
+using namespace std;
+
+struct WeightRecord {
+    string date;
+    double weight;
+};
+
+vector<WeightRecord> records;
+double targetWeight = 0;
+
+// Get current date
+string getDate() {
+    time_t now = time(0);
+    tm *localTime = localtime(&now);
+
+    char buffer[20];
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d", localTime);
+
+    return string(buffer);
+}
+
+// Save records to file
+void saveRecords() {
+    ofstream file("weight_data.txt");
+
+    for (const auto &record : records) {
+        file << record.date << " " << record.weight << endl;
+    }
+
+    file.close();
+}
+
+// Load records from file
+void loadRecords() {
+    ifstream file("weight_data.txt");
+
+    WeightRecord record;
+
+    while (file >> record.date >> record.weight) {
+        records.push_back(record);
+    }
+
+    file.close();
+}
+
+// Add weight
+void addWeight() {
+    double weight;
+
+    cout << "\nEnter your weight (kg): ";
+    cin >> weight;
+
+    if (cin.fail() || weight <= 0 || weight > 700) {
+        cout << "Invalid weight!\n";
+        cin.clear();
+        cin.ignore(10000, '\n');
+        return;
+    }
+
+    WeightRecord record;
+    record.date = getDate();
+    record.weight = weight;
+
+    records.push_back(record);
+
+    saveRecords();
+
+    cout << "Weight record added successfully!\n";
+}
+
+// Display weight history
+void viewRecords() {
+    if (records.empty()) {
+        cout << "\nNo records found.\n";
+        return;
+    }
+
+    cout << "\n------ Weight History ------\n";
+
+    cout << left << setw(15) << "Date"
+         << "Weight (kg)\n";
+
+    for (const auto &record : records) {
+        cout << left << setw(15) << record.date
+             << record.weight << endl;
+    }
+}
+
+// Calculate BMI
+void calculateBMI() {
+    double weight, height;
+
+    cout << "\nEnter weight (kg): ";
+    cin >> weight;
+
+    cout << "Enter height (cm): ";
+    cin >> height;
+
+    if (cin.fail() || weight <= 0 || weight > 700 ||
+        height <= 0 || height > 300) {
+        cout << "Invalid input!\n";
+        cin.clear();
+        cin.ignore(10000, '\n');
+        return;
+    }
+
+    height = height / 100;
+
+    double bmi = weight / (height * height);
+
+    cout << fixed << setprecision(2);
+    cout << "\nYour BMI is: " << bmi << endl;
+
+    if (bmi < 18.5)
+        cout << "Category: Underweight\n";
+    else if (bmi < 25)
+        cout << "Category: Normal range\n";
+    else if (bmi < 30)
+        cout << "Category: Overweight\n";
+    else
+        cout << "Category: Obesity range\n";
+}
+
+// Set target weight
+void setTarget() {
+    cout << "\nEnter your target weight (kg): ";
+    cin >> targetWeight;
+
+    if (cin.fail() || targetWeight <= 0 ||
+        targetWeight > 700) {
+        cout << "Invalid target weight!\n";
+        targetWeight = 0;
+        cin.clear();
+        cin.ignore(10000, '\n');
+        return;
+    }
+
+    cout << "Target weight saved successfully!\n";
+}
+
+// Show progress
+void showProgress() {
+    if (records.empty()) {
+        cout << "\nNo weight records available.\n";
+        return;
+    }
+
+    double firstWeight = records.front().weight;
+    double currentWeight = records.back().weight;
+
+    cout << fixed << setprecision(2);
+
+    cout << "\nStarting Weight: " << firstWeight << " kg";
+    cout << "\nCurrent Weight: " << currentWeight << " kg";
+
+    cout << "\nWeight Change: "
+         << currentWeight - firstWeight << " kg\n";
+
+    if (targetWeight > 0) {
+        cout << "Target Weight: " << targetWeight << " kg\n";
+        cout << "Difference from target: "
+             << currentWeight - targetWeight << " kg\n";
+    }
+}
+
+// Main function
+int main() {
+    loadRecords();
+
+    int choice;
+
+    do {
+        cout << "\n================================\n";
+        cout << "     PERSONAL WEIGHT TRACKER\n";
+        cout << "================================\n";
+
+        cout << "1. Add Weight Record\n";
+        cout << "2. View Weight History\n";
+        cout << "3. Calculate BMI\n";
+        cout << "4. Set Target Weight\n";
+        cout << "5. View Progress\n";
+        cout << "6. Exit\n";
+
+        cout << "\nEnter your choice: ";
+        cin >> choice;
+
+        if (cin.fail()) {
+            cout << "Please enter a valid number.\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+            continue;
+        }
+
+        switch (choice) {
+            case 1:
+                addWeight();
+                break;
+
+            case 2:
+                viewRecords();
+                break;
+
+            case 3:
+                calculateBMI();
+                break;
+
+            case 4:
+                setTarget();
+                break;
+
+            case 5:
+                showProgress();
+                break;
+
+            case 6:
+                cout << "\nThank you for using Weight Tracker!\n";
+                break;
+
+            default:
+                cout << "\nInvalid choice! Try again.\n";
+        }
+
+    } while (choice != 6);
+
+    return 0;
+}
+
